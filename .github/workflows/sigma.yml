@@ -1,0 +1,51 @@
+name: Deploy Beta
+
+on:
+  push:
+    branches:
+      - beta
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-beta
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout beta
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # 7.0.0
+        with:
+          submodules: recursive
+          ref: beta
+
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-deps
+
+      - name: Build
+        run: pnpm build:beta
+        env:
+          NODE_ENV: beta
+
+      - name: Deploy to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          cp -r dist /tmp/dist
+
+          git fetch origin main
+          git checkout --orphan main
+
+          git rm -rf . 2>/dev/null || true
+
+          cp -r /tmp/dist/* .
+
+          git add -A
+          git commit -m "Deploy beta build"
+          git push origin main --force
