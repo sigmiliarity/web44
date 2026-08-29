@@ -37,15 +37,19 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Save the build
           cp -r dist /tmp/dist
 
-          git fetch origin main
+          # Create a clean main branch
           git checkout --orphan main
 
+          # Remove everything from the branch
           git rm -rf . 2>/dev/null || true
 
+          # Copy the build into the branch
           cp -r /tmp/dist/* .
 
+          # Commit and push
           git add -A
           git commit -m "Deploy beta build"
           git push origin main --force
